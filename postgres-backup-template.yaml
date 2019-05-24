@@ -76,7 +76,7 @@ objects:
                     - name: DATABASE_NAME
                       value: ${DATABASE_NAME}
                     - name: TZ
-                      value: Europe/Zurich
+                      value: America/Montevideo
                   volumeMounts:
                     - name: database-backup
                       mountPath: /database-backup
