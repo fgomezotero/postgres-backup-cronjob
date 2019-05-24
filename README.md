@@ -10,11 +10,6 @@ The project contains multiple templates:
 
 * postgres-backup-template.yaml
 * postgres-backup-template-with-secret.yaml (this example provides three keys in the secret: database-user, database-password, database-name)
-* postgres-backup-template-with-icinga.yaml
-* postgres-backup-template-with-icinga-and-secret.yaml (this example provides three keys in the secret: database-user, database-password, database-name)
-
-As the names are stating two templates also provide an implementation with a monitoring support from icinga.
-More about the monitoring can be found int the section [Monitoring](#Monitoring)
 
 ## How to deploy the postgres DB backup pod
 
@@ -67,19 +62,13 @@ Instead of passing the DB Credentials in plaintext to the cronjob it's possible 
 
 **Note:** Either provide DATABASE_USER AND DATABASE_PASSWORD or DATABASE_SECRET
 
-### Create the cronjob (with icinga suppport)
-
-```bash
-oc process -f postgres-backup-template-with-icinga.yaml DATABASE_USER=<dbuser> DATABASE_PASSWORD=<dbpassword> DATABASE_HOST=<dbhost> DATABASE_PORT=<dbport> DATABASE_NAME=<dbname> DATABASE_BACKUP_VOLUME_CLAIM=<pvc-claim-name> ICINGA_USERNAME=<icinga-user> ICINGA_PASSWORD=<icinga-password> ICINGA_SERVICE_URL=<icinga-service-url> | oc create -f -
-```
-
-### Create the cronjob (without icinga suppport)
+### Create the cronjob
 
 ```bash
 oc process -f postgres-backup-template.yaml DATABASE_USER=<dbuser> DATABASE_PASSWORD=<dbpassword> DATABASE_HOST=<dbhost> DATABASE_PORT=<dbport> DATABASE_NAME=<dbname> DATABASE_BACKUP_VOLUME_CLAIM=<pvc-claim-name> | oc create -f -
 ```
 
-### Create the cronjob (with credentials & without icinga suppport)
+### Create the cronjob (with credentials)
 
 The secret used in this template provided database name, database user and database password.
 
@@ -112,17 +101,9 @@ To restore the backup you start a backup pod (e.g. in debug mode) connect to the
 
 ````bash
 oc rsh postgres-backup-[xyz]-debug
-psql --username=db-user> --password --host=<host> postgres < <path-to-backupfile> (the backupfile has to be unpacked)
+psql --username=<db-user> --password --host=<host> postgres < <path-to-backupfile> (the backupfile has to be unpacked)
 ````
 
 > HINT: The database `postgres` is default installed. For the backup it is required to name a database. As the backupfile will recreate the database this should have no impact.
 >
 > The User used to do the restore must have at least CREATEDB privileges: `ALTER ROLE <user> WITH CREATEDB`
-
-### Monitoring
-
-In the template `postgres-backup-template-with-icinga.yaml` an passive incinga service is monitoring the backup. Should the bash script (responsible for the backup) throw an error at any point during the executing the notification will not be sent to icinga. The passive service checks periodically if a notification was received. If not the service will update its status. The following parameters are used for the monitoring:
-
-* ICINGA_USERNAME
-* ICINGA_PASSWORD
-* ICINGA_SERVICE_URL
